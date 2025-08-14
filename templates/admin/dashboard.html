@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PixelCraft Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-panel">
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h2>PixelCraft PC</h2>
+                <span>Admin Panel</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item active">
+                    <i class="fas fa-dashboard"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_pcs') }}" class="nav-item">
+                    <i class="fas fa-desktop"></i> PCs
+                </a>
+                <a href="{{ url_for('admin_games') }}" class="nav-item">
+                    <i class="fas fa-gamepad"></i> Jogos
+                </a>
+                <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                    <i class="fas fa-shopping-bag"></i> Pedidos
+                </a>
+                <a href="{{ url_for('admin_customers') }}" class="nav-item">
+                    <i class="fas fa-users"></i> Clientes
+                </a>
+                <a href="{{ url_for('admin_settings') }}" class="nav-item">
+                    <i class="fas fa-cog"></i> Configurações
+                </a>
+                <a href="{{ url_for('index') }}" class="nav-item" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> Ver Site
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1>Dashboard</h1>
+                <div class="header-actions">
+                    <span>Olá, {{ current_user.username }}</span>
+                </div>
+            </div>
+            
+            <div class="admin-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-desktop"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ stats.total_pcs }}</h3>
+                            <p>PCs Cadastrados</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ stats.total_orders }}</h3>
+                            <p>Pedidos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ stats.total_customers }}</h3>
+                            <p>Clientes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>R$ {{ stats.total_revenue|currency }}</h3>
+                            <p>Receita Total</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Orders -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h2>Pedidos Recentes</h2>
+                        <a href="{{ url_for('admin_orders') }}" class="btn btn-sm">Ver todos</a>
+                    </div>
+                    <div class="card-body">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cliente</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>{{ order.order_number }}</td>
+                                    <td>{{ order.customer_name }}</td>
+                                    <td>R$ {{ order.total|currency }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ order.status }}">
+                                            {{ order.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ order.created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

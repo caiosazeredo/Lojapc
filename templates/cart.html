@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Carrinho - PixelCraft PC{% endblock %}
+
+{% block content %}
+<section class="cart-page">
+    <div class="container">
+        <h1>Seu <span class="gradient-text">Carrinho</span></h1>
+        
+        {% if cart_items %}
+        <div class="cart-content">
+            <div class="cart-items">
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <img src="{{ item.image }}" alt="{{ item.name }}">
+                    <div class="item-info">
+                        <h3>{{ item.name }}</h3>
+                        <p>Código: #{{ item.id }}</p>
+                    </div>
+                    <div class="item-quantity">
+                        <button onclick="updateQuantity({{ item.id }}, -1)">-</button>
+                        <input type="number" value="{{ item.quantity }}" min="1">
+                        <button onclick="updateQuantity({{ item.id }}, 1)">+</button>
+                    </div>
+                    <div class="item-price">
+                        <span>R$ {{ (item.price * item.quantity)|currency }}</span>
+                        <small>R$ {{ item.price|currency }} cada</small>
+                    </div>
+                    <button class="remove-item" onclick="removeFromCart({{ item.id }})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="cart-summary">
+                <h3>Resumo do Pedido</h3>
+                <div class="summary-line">
+                    <span>Subtotal</span>
+                    <span>R$ {{ total|currency }}</span>
+                </div>
+                <div class="summary-line">
+                    <span>Frete</span>
+                    <span>Calcular</span>
+                </div>
+                <hr>
+                <div class="summary-total">
+                    <span>Total</span>
+                    <span>R$ {{ total|currency }}</span>
+                </div>
+                <div class="summary-installments">
+                    ou 12x de R$ {{ (total/12)|currency }}
+                </div>
+                
+                <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-block">
+                    Finalizar Compra
+                </a>
+                <a href="{{ url_for('catalog') }}" class="btn btn-outline btn-block">
+                    Continuar Comprando
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-cart">
+            <i class="fas fa-shopping-cart"></i>
+            <h2>Seu carrinho está vazio</h2>
+            <p>Adicione alguns PCs incríveis!</p>
+            <a href="{{ url_for('catalog') }}" class="btn btn-primary">
+                Ver PCs
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
