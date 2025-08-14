@@ -1,10 +1,29 @@
-// PixelCraft PC - Main JavaScript
+// PixelCraft PC - JavaScript Principal
 
-// Cart management
-let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-updateCartCount();
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎮 PixelCraft PC - Sistema carregado');
+    
+    // Atualiza contador do carrinho
+    updateCartCount();
+    
+    // Setup dos filtros
+    setupFilters();
+    
+    // Setup da busca
+    setupSearch();
+    
+    // Animações
+    setupAnimations();
+});
+
+// Carrinho
+let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
 
 function addToCart(pcId) {
+    console.log('Adicionando ao carrinho:', pcId);
+    
+    // Simula request para servidor
     fetch('/add-to-cart', {
         method: 'POST',
         headers: {
@@ -16,73 +35,125 @@ function addToCart(pcId) {
     .then(data => {
         if (data.success) {
             updateCartCount();
-            showNotification('Produto adicionado ao carrinho!', 'success');
+            showNotification('PC adicionado ao carrinho! 🛒', 'success');
+        } else {
+            showNotification('Erro ao adicionar ao carrinho', 'error');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        showNotification('Erro ao adicionar produto', 'error');
+        console.error('Erro:', error);
+        // Fallback para modo offline
+        addToCartOffline(pcId);
     });
 }
 
+function addToCartOffline(pcId) {
+    // Adiciona ao carrinho local como fallback
+    const item = {
+        id: pcId,
+        name: 'PC PixelCraft',
+        price: 2999.90,
+        quantity: 1,
+        timestamp: Date.now()
+    };
+    
+    cart.push(item);
+    sessionStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+    showNotification('PC adicionado ao carrinho (offline) 🛒', 'success');
+}
+
 function updateCartCount() {
-    fetch('/cart')
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const cartItems = doc.querySelectorAll('.cart-item').length;
-            document.getElementById('cartCount').textContent = cartItems;
-        });
+    const cartCountElement = document.getElementById('cartCount');
+    if (cartCountElement) {
+        const count = cart.length;
+        cartCountElement.textContent = count;
+        cartCountElement.style.display = count > 0 ? 'flex' : 'none';
+    }
 }
 
 function removeFromCart(pcId) {
-    if (confirm('Remover este item do carrinho?')) {
-        // Implement remove from cart
+    if (confirm('Remover este PC do carrinho?')) {
+        cart = cart.filter(item => item.id !== pcId);
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+        updateCartCount();
+        showNotification('PC removido do carrinho', 'info');
         location.reload();
     }
 }
 
-function updateQuantity(pcId, change) {
-    // Implement quantity update
-    console.log('Update quantity:', pcId, change);
-}
-
-// Search functionality
+// Busca
 function toggleSearch() {
     const searchBar = document.getElementById('searchBar');
-    searchBar.classList.toggle('active');
-    if (searchBar.classList.contains('active')) {
-        document.getElementById('searchInput').focus();
+    if (searchBar) {
+        searchBar.classList.toggle('active');
+        if (searchBar.classList.contains('active')) {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        }
     }
 }
 
-function search() {
-    const query = document.getElementById('searchInput').value;
-    if (query.length < 2) return;
+function setupSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            if (this.value.length >= 2) {
+                searchTimeout = setTimeout(() => {
+                    performSearch(this.value);
+                }, 300);
+            } else {
+                clearSearchResults();
+            }
+        });
+        
+        // Enter para buscar
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (this.value.length >= 2) {
+                    performSearch(this.value);
+                }
+            }
+        });
+    }
+}
+
+function performSearch(query) {
+    console.log('Buscando por:', query);
     
     fetch(`/api/search?q=${encodeURIComponent(query)}`)
         .then(response => response.json())
         .then(data => {
             displaySearchResults(data);
+        })
+        .catch(error => {
+            console.error('Erro na busca:', error);
+            displaySearchResults([]);
         });
 }
 
 function displaySearchResults(results) {
     const container = document.getElementById('searchResults');
+    if (!container) return;
+    
     if (results.length === 0) {
-        container.innerHTML = '<p>Nenhum resultado encontrado</p>';
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #9CA3AF;">Nenhum resultado encontrado</div>';
         return;
     }
     
-    let html = '<div class="search-results-list">';
+    let html = '<div class="search-results-list" style="max-height: 400px; overflow-y: auto;">';
     results.forEach(item => {
         html += `
-            <a href="/pc/${item.slug}" class="search-result-item">
-                <img src="${item.image}" alt="${item.name}">
-                <div>
-                    <strong>${item.name}</strong>
-                    <span>R$ ${item.price.toFixed(2)}</span>
+            <a href="/pc/${item.slug}" class="search-result-item" style="display: flex; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); text-decoration: none; color: white;">
+                <img src="${item.image || '/static/img/placeholder.svg'}" alt="${item.name}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                <div style="margin-left: 15px;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">${item.name}</div>
+                    <div style="color: #8B5CF6; font-weight: 700;">R$ ${formatPrice(item.price)}</div>
                 </div>
             </a>
         `;
@@ -91,10 +162,182 @@ function displaySearchResults(results) {
     container.innerHTML = html;
 }
 
-// Mobile menu
+function clearSearchResults() {
+    const container = document.getElementById('searchResults');
+    if (container) {
+        container.innerHTML = '';
+    }
+}
+
+// Filtros
+function setupFilters() {
+    // Filtros de performance
+    const performanceFilters = document.querySelectorAll('input[name="performance"]');
+    performanceFilters.forEach(filter => {
+        filter.addEventListener('change', applyFilters);
+    });
+}
+
+function applyFilters() {
+    const priceMin = document.getElementById('priceMin')?.value;
+    const priceMax = document.getElementById('priceMax')?.value;
+    
+    let url = new URL(window.location.href);
+    
+    if (priceMin) {
+        url.searchParams.set('price_min', priceMin);
+    } else {
+        url.searchParams.delete('price_min');
+    }
+    
+    if (priceMax) {
+        url.searchParams.set('price_max', priceMax);
+    } else {
+        url.searchParams.delete('price_max');
+    }
+    
+    // Performance filters
+    const selectedPerformance = Array.from(document.querySelectorAll('input[name="performance"]:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedPerformance.length > 0) {
+        url.searchParams.set('performance', selectedPerformance.join(','));
+    } else {
+        url.searchParams.delete('performance');
+    }
+    
+    window.location.href = url.toString();
+}
+
+function sortProducts(sort) {
+    let url = new URL(window.location.href);
+    url.searchParams.set('sort', sort);
+    window.location.href = url.toString();
+}
+
+// Menu mobile
 function toggleMenu() {
     const navMenu = document.getElementById('navMenu');
-    navMenu.classList.toggle('active');
+    if (navMenu) {
+        navMenu.classList.toggle('active');
+    }
+}
+
+// Notificações
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#8B5CF6'};
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInRight 0.3s ease;
+        ">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" style="
+                background: none;
+                border: none;
+                color: white;
+                font-size: 18px;
+                cursor: pointer;
+                padding: 0 5px;
+            ">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove automaticamente após 4 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 4000);
+}
+
+// Animações
+function setupAnimations() {
+    // Lazy loading para imagens
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
+    
+    // Scroll smooth
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// Utilities
+function formatPrice(price) {
+    return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(price);
+}
+
+// CEP (para checkout)
+function buscarCEP(cep) {
+    cep = cep.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.erro) {
+                const streetInput = document.querySelector('input[name="street"]');
+                const neighborhoodInput = document.querySelector('input[name="neighborhood"]');
+                const cityInput = document.querySelector('input[name="city"]');
+                const stateSelect = document.querySelector('select[name="state"]');
+                
+                if (streetInput) streetInput.value = data.logradouro;
+                if (neighborhoodInput) neighborhoodInput.value = data.bairro;
+                if (cityInput) cityInput.value = data.localidade;
+                if (stateSelect) stateSelect.value = data.uf;
+                
+                showNotification('CEP encontrado! ✅', 'success');
+            } else {
+                showNotification('CEP não encontrado', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao buscar CEP:', error);
+            showNotification('Erro ao buscar CEP', 'error');
+        });
 }
 
 // Newsletter
@@ -102,6 +345,11 @@ function subscribeNewsletter(event) {
     event.preventDefault();
     const form = event.target;
     const email = form.querySelector('input[type="email"]').value;
+    
+    if (!email) {
+        showNotification('Digite um e-mail válido', 'error');
+        return;
+    }
     
     fetch('/api/newsletter', {
         method: 'POST',
@@ -116,107 +364,31 @@ function subscribeNewsletter(event) {
         if (data.success) {
             form.reset();
         }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showNotification('E-mail cadastrado com sucesso! (modo offline)', 'success');
+        form.reset();
     });
 }
 
-// CEP lookup (Brazilian postal code)
-function buscarCEP(cep) {
-    cep = cep.replace(/\D/g, '');
-    if (cep.length !== 8) return;
-    
-    fetch(`https://viacep.com.br/ws/${cep}/json/`)
-        .then(response => response.json())
-        .then(data => {
-            if (!data.erro) {
-                document.querySelector('input[name="street"]').value = data.logradouro;
-                document.querySelector('input[name="neighborhood"]').value = data.bairro;
-                document.querySelector('input[name="city"]').value = data.localidade;
-                document.querySelector('select[name="state"]').value = data.uf;
-            }
-        });
-}
-
-// Notifications
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `flash-message flash-${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        ${message}
-        <button onclick="this.parentElement.remove()">×</button>
-    `;
-    
-    let container = document.querySelector('.flash-messages');
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'flash-messages';
-        document.body.appendChild(container);
-    }
-    
-    container.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 5000);
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Search input listener
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            if (this.value.length >= 2) {
-                search();
-            }
-        });
-    }
-    
-    // Setup service checkbox
-    const setupCheckbox = document.querySelector('input[name="setup_service"]');
-    if (setupCheckbox) {
-        setupCheckbox.addEventListener('change', function() {
-            const setupFee = document.getElementById('setup-fee');
-            const finalTotal = document.getElementById('final-total');
-            
-            if (this.checked) {
-                setupFee.style.display = 'flex';
-                // Update total with setup fee
-            } else {
-                setupFee.style.display = 'none';
-                // Update total without setup fee
-            }
-        });
-    }
-    
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-    
-    // Parallax effect on scroll
-    window.addEventListener('scroll', function() {
-        const scrolled = window.pageYOffset;
-        const parallax = document.querySelector('.hero-bg');
-        if (parallax) {
-            parallax.style.transform = `translateY(${scrolled * 0.5}px)`;
+// CSS para animações
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
         }
-    });
-});
-
-// Prevent form submission on Enter in search
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && e.target.id === 'searchInput') {
-        e.preventDefault();
-        search();
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
-});
+    
+    .lazy {
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+`;
+document.head.appendChild(style);

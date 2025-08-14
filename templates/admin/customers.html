@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - PixelCraft Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-panel">
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h2>PixelCraft PC</h2>
+                <span>Admin Panel</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
+                    <i class="fas fa-dashboard"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_pcs') }}" class="nav-item">
+                    <i class="fas fa-desktop"></i> PCs
+                </a>
+                <a href="{{ url_for('admin_games') }}" class="nav-item active">
+                    <i class="fas fa-users"></i> Clientes
+                </a>
+                <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                    <i class="fas fa-shopping-bag"></i> Pedidos
+                </a>
+                <a href="{{ url_for('admin_customers') }}" class="nav-item">
+                    <i class="fas fa-users"></i> Clientes
+                </a>
+                <a href="{{ url_for('admin_settings') }}" class="nav-item">
+                    <i class="fas fa-cog"></i> Configurações
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </nav>
+        </aside>
+        
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1>Clientes</h1>
+            </div>
+            
+            <div class="admin-content">
+                <div class="admin-card">
+                    <div class="card-body">
+                        <p style="text-align: center; padding: 40px; color: #9CA3AF;">
+                            <i class="fas fa-users" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                            Gerenciamento de clientes em desenvolvimento
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

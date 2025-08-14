@@ -281,5 +281,55 @@ def not_found(e):
 def server_error(e):
     return render_template('500.html'), 500
 
+
+# Rotas Admin adicionais
+@app.route('/admin/pcs')
+@login_required
+def admin_pcs():
+    query = '''
+        SELECT p.*, c.name as category_name
+        FROM pcs p
+        LEFT JOIN categories c ON p.category_id = c.id
+        ORDER BY p.created_at DESC
+    '''
+    pcs = query_db(query)
+    return render_template('admin/pcs.html', pcs=pcs)
+
+@app.route('/admin/games')
+@login_required
+def admin_games():
+    games = query_db('SELECT * FROM games ORDER BY created_at DESC')
+    return render_template('admin/games.html', games=games)
+
+@app.route('/admin/orders')
+@login_required
+def admin_orders():
+    query = '''
+        SELECT o.*, c.name as customer_name
+        FROM orders o
+        LEFT JOIN customers c ON o.customer_id = c.id
+        ORDER BY o.created_at DESC
+    '''
+    orders = query_db(query)
+    return render_template('admin/orders.html', orders=orders)
+
+@app.route('/admin/customers')
+@login_required
+def admin_customers():
+    customers = query_db('SELECT * FROM customers ORDER BY created_at DESC')
+    return render_template('admin/customers.html', customers=customers)
+
+@app.route('/admin/settings')
+@login_required
+def admin_settings():
+    return render_template('admin/settings.html')
+
+@app.route('/admin/pc/new')
+@login_required
+def admin_pc_new():
+    categories = query_db('SELECT * FROM categories WHERE active = 1 ORDER BY ordem')
+    return render_template('admin/pc_form.html', categories=categories)
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
