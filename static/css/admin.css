@@ -1,205 +1,170 @@
-/* Admin Panel Styles */
+/* Admin Panel CSS - Melhorado */
 
-.admin-wrapper {
-    display: flex;
+.admin-login {
     min-height: 100vh;
-    background: #0F0F0F;
-}
-
-/* Sidebar */
-.admin-sidebar {
-    width: 260px;
-    background: #1F2937;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-header {
-    padding: 30px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-header h2 {
-    font-size: 24px;
-    margin-bottom: 5px;
-}
-
-.sidebar-header span {
-    color: #9CA3AF;
-    font-size: 14px;
-}
-
-.sidebar-nav {
-    padding: 20px 0;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    color: #D1D5DB;
-    text-decoration: none;
-    transition: all 0.3s;
-}
-
-.nav-item:hover {
-    background: rgba(139, 92, 246, 0.1);
-    color: #8B5CF6;
-}
-
-.nav-item.active {
-    background: rgba(139, 92, 246, 0.2);
-    color: #8B5CF6;
-    border-left: 3px solid #8B5CF6;
-}
-
-/* Main Content */
-.admin-main {
-    flex: 1;
-    padding: 30px;
-    overflow-y: auto;
-}
-
-.admin-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 40px;
-}
-
-.admin-header h1 {
-    font-size: 32px;
-}
-
-.header-actions {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 25px;
-    margin-bottom: 40px;
-}
-
-.stat-card {
-    background: #1F2937;
-    border-radius: 12px;
-    padding: 25px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    color: white;
+    background: linear-gradient(135deg, #0F0F0F 0%, #1F2937 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.stat-info h3 {
-    font-size: 28px;
-    margin-bottom: 5px;
-}
-
-.stat-info p {
-    color: #9CA3AF;
-    font-size: 14px;
-}
-
-/* Admin Card */
-.admin-card {
-    background: #1F2937;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 30px;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 25px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.card-header h2 {
-    font-size: 20px;
-}
-
-.card-body {
-    padding: 25px;
-}
-
-/* Admin Table */
-.admin-table {
+.login-container {
     width: 100%;
-    border-collapse: collapse;
+    max-width: 420px;
+    padding: 20px;
 }
 
-.admin-table thead th {
-    text-align: left;
-    padding: 12px;
+.login-box {
+    background: #1F2937;
+    border-radius: 16px;
+    padding: 50px 40px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.login-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.login-header p {
     color: #9CA3AF;
-    font-weight: 600;
     font-size: 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.admin-table tbody td {
-    padding: 15px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+/* Form styles */
+.form-group {
+    margin-bottom: 24px;
 }
 
-.admin-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.02);
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #E5E7EB;
+    font-weight: 500;
+    font-size: 14px;
 }
 
-.table-img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 8px;
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 16px;
+    transition: all 0.3s;
 }
 
-.action-buttons {
-    display: flex;
+.form-group input:focus {
+    outline: none;
+    border-color: #8B5CF6;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #6B7280;
+}
+
+/* Button styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
-}
-
-.btn-sm {
-    padding: 8px 15px;
-    font-size: 14px;
-}
-
-/* Badges */
-.badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+    padding: 14px 24px;
+    border-radius: 10px;
     font-weight: 600;
-    display: inline-block;
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: none;
+    font-size: 16px;
+    line-height: 1;
 }
 
-.badge-success {
-    background: rgba(16, 185, 129, 0.2);
-    color: #10B981;
+.btn-primary {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    color: #fff;
 }
 
-.badge-danger {
-    background: rgba(239, 68, 68, 0.2);
-    color: #EF4444;
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);
 }
 
-.badge-pending {
-    background: rgba(252, 211, 77, 0.2);
-    color: #FCD34D;
+.btn-block {
+    width: 100%;
+}
+
+/* Alert styles */
+.alert {
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #FCA5A5;
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #86EFAC;
+}
+
+.alert::before {
+    content: "⚠️";
+    font-size: 16px;
+}
+
+.alert-success::before {
+    content: "✅";
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .login-box {
+        padding: 30px 25px;
+    }
+    
+    .login-container {
+        padding: 15px;
+    }
+}
+
+/* Loading animation */
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Focus styles for accessibility */
+.btn:focus-visible {
+    outline: 2px solid #8B5CF6;
+    outline-offset: 2px;
+}
+
+/* Smooth transitions */
+* {
+    transition: all 0.2s ease;
 }
