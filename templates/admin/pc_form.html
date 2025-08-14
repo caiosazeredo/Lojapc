@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if action == 'edit' %}Editar{% else %}Novo{% endif %} PC - PixelCraft Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-panel">
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h2>PixelCraft PC</h2>
+                <span>Admin Panel</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
+                    <i class="fas fa-dashboard"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_pcs') }}" class="nav-item active">
+                    <i class="fas fa-desktop"></i> PCs
+                </a>
+                <a href="{{ url_for('admin_games') }}" class="nav-item">
+                    <i class="fas fa-gamepad"></i> Jogos
+                </a>
+                <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                    <i class="fas fa-shopping-bag"></i> Pedidos
+                </a>
+                <a href="{{ url_for('admin_customers') }}" class="nav-item">
+                    <i class="fas fa-users"></i> Clientes
+                </a>
+                <a href="{{ url_for('admin_settings') }}" class="nav-item">
+                    <i class="fas fa-cog"></i> Configurações
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </nav>
+        </aside>
+        
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1>{% if action == 'edit' %}Editar{% else %}Novo{% endif %} PC</h1>
+                <div class="header-actions">
+                    <a href="{{ url_for('admin_pcs') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+            
+            <div class="admin-content">
+                <div class="admin-card">
+                    <div class="card-body">
+                        <form method="POST">
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">
+                                        {{ message }}
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                            
+                            <!-- Informações Básicas -->
+                            <h3 style="margin-bottom: 20px; color: #8B5CF6;">
+                                <i class="fas fa-info-circle"></i> Informações Básicas
+                            </h3>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="name">Nome do PC *</label>
+                                    <input type="text" id="name" name="name" value="{{ pc.name if pc else '' }}" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="category_id">Categoria *</label>
+                                    <select id="category_id" name="category_id" required>
+                                        <option value="">Selecione uma categoria</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" 
+                                                {% if pc and pc.category_id == category.id %}selected{% endif %}>
+                                            {{ category.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="subtitle">Subtítulo</label>
+                                <input type="text" id="subtitle" name="subtitle" value="{{ pc.subtitle if pc else '' }}">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="description">Descrição</label>
+                                <textarea id="description" name="description" rows="4">{{ pc.description if pc else '' }}</textarea>
+                            </div>
+                            
+                            <!-- Preços -->
+                            <h3 style="margin: 40px 0 20px; color: #8B5CF6;">
+                                <i class="fas fa-dollar-sign"></i> Preços
+                            </h3>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="price">Preço Atual (R$) *</label>
+                                    <input type="number" id="price" name="price" step="0.01" 
+                                           value="{{ pc.price if pc else '' }}" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="price_old">Preço Anterior (R$)</label>
+                                    <input type="number" id="price_old" name="price_old" step="0.01" 
+                                           value="{{ pc.price_old if pc and pc.price_old else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="setup_price">Preço Configuração (R$)</label>
+                                    <input type="number" id="setup_price" name="setup_price" step="0.01" 
+                                           value="{{ pc.setup_price if pc else '150.00' }}">
+                                </div>
+                            </div>
+                            
+                            <!-- Especificações -->
+                            <h3 style="margin: 40px 0 20px; color: #8B5CF6;">
+                                <i class="fas fa-microchip"></i> Especificações
+                            </h3>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="processor">Processador</label>
+                                    <input type="text" id="processor" name="processor" value="{{ pc.processor if pc else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="gpu">Placa de Vídeo</label>
+                                    <input type="text" id="gpu" name="gpu" value="{{ pc.gpu if pc else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="ram">Memória RAM</label>
+                                    <input type="text" id="ram" name="ram" value="{{ pc.ram if pc else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="storage">Armazenamento</label>
+                                    <input type="text" id="storage" name="storage" value="{{ pc.storage if pc else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="motherboard">Placa-mãe</label>
+                                    <input type="text" id="motherboard" name="motherboard" value="{{ pc.motherboard if pc else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="psu">Fonte</label>
+                                    <input type="text" id="psu" name="psu" value="{{ pc.psu if pc else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="case_model">Gabinete</label>
+                                    <input type="text" id="case_model" name="case_model" value="{{ pc.case_model if pc else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="cooling">Refrigeração</label>
+                                    <input type="text" id="cooling" name="cooling" value="{{ pc.cooling if pc else '' }}">
+                                </div>
+                            </div>
+                            
+                            <!-- Arte/Grafite -->
+                            <h3 style="margin: 40px 0 20px; color: #8B5CF6;">
+                                <i class="fas fa-paint-brush"></i> Arte e Grafite
+                            </h3>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="graffiti_artist">Artista</label>
+                                    <input type="text" id="graffiti_artist" name="graffiti_artist" value="{{ pc.graffiti_artist if pc else '' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="graffiti_style">Estilo</label>
+                                    <input type="text" id="graffiti_style" name="graffiti_style" value="{{ pc.graffiti_style if pc else '' }}">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="graffiti_description">Descrição da Arte</label>
+                                <textarea id="graffiti_description" name="graffiti_description" rows="3">{{ pc.graffiti_description if pc else '' }}</textarea>
+                            </div>
+                            
+                            <!-- Status e Flags -->
+                            <h3 style="margin: 40px 0 20px; color: #8B5CF6;">
+                                <i class="fas fa-cogs"></i> Status e Configurações
+                            </h3>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="active" value="1" 
+                                               {% if not pc or pc.active %}checked{% endif %}>
+                                        Ativo
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="featured" value="1" 
+                                               {% if pc and pc.featured %}checked{% endif %}>
+                                        Destaque
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="bestseller" value="1" 
+                                               {% if pc and pc.bestseller %}checked{% endif %}>
+                                        Mais Vendido
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="limited_edition" value="1" 
+                                               {% if pc and pc.limited_edition %}checked{% endif %}>
+                                        Edição Limitada
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="pre_order" value="1" 
+                                               {% if pc and pc.pre_order %}checked{% endif %}>
+                                        Pré-venda
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" name="in_stock" value="1" 
+                                               {% if not pc or pc.in_stock %}checked{% endif %}>
+                                        Em Estoque
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Botões -->
+                            <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: flex-end;">
+                                <a href="{{ url_for('admin_pcs') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 
+                                    {% if action == 'edit' %}Atualizar{% else %}Criar{% endif %} PC
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #E5E7EB;
+            font-weight: 500;
+        }
+        
+        .form-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+        
+        h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+        }
+    </style>
+</body>
+</html>
