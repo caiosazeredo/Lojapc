@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from PIL import Image
+import uuid
 import sqlite3
 import json
 import os
@@ -19,6 +21,21 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'admin_login'
+
+# Configurações de upload
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+MAX_IMAGE_SIZE = (1920, 1080)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def resize_image(image_path, max_size=MAX_IMAGE_SIZE):
+    try:
+        with Image.open(image_path) as img:
+            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            img.save(image_path, optimize=True, quality=85)
+    except Exception as e:
+        print(f"Erro ao redimensionar: {e}")
 
 # Database helper
 def get_db():
@@ -177,6 +194,60 @@ def checkout():
     return render_template('checkout.html', cart=cart, total=total)
 
 # Admin Routes
+
+@app.route('/admin/upload-image', methods=['POST'])
+@login_required
+def upload_image():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo enviado'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
+    
+    if file and allowed_file(file.filename):
+        # Gerar nome único
+        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Criar diretório se não existir
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        
+        # Salvar arquivo
+        file.save(filepath)
+        
+        # Redimensionar se necessário
+        resize_image(filepath)
+        
+        # Retornar URL da imagem
+        image_url = f"/static/img/pcs/{filename}"
+        return jsonify({'success': True, 'url': image_url, 'filename': filename})
+    
+    return jsonify({'error': 'Tipo de arquivo não permitido'}), 400
+
+@app.route('/admin/delete-image', methods=['POST'])
+@login_required
+def delete_image():
+    data = request.get_json()
+    filename = data.get('filename')
+    
+    if not filename:
+        return jsonify({'error': 'Nome do arquivo não fornecido'}), 400
+    
+    # Verificar se arquivo existe
+    if filename.startswith('/static/img/pcs/'):
+        filename = filename.replace('/static/img/pcs/', '')
+    
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'error': f'Erro ao excluir arquivo: {str(e)}'}), 500
+    
+    return jsonify({'error': 'Arquivo não encontrado'}), 404
+
 @app.route('/admin')
 @login_required
 def admin_dashboard():

@@ -6,6 +6,157 @@
     <title>{% if action == 'edit' %}Editar{% else %}Novo{% endif %} PC - PixelCraft Admin</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .image-upload-section {
+            background: rgba(139, 92, 246, 0.05);
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .image-upload-section:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(139, 92, 246, 0.08);
+        }
+        
+        .upload-area {
+            border: 2px dashed #6B7280;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .upload-area:hover {
+            border-color: #8B5CF6;
+            background: rgba(139, 92, 246, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: #EC4899;
+            background: rgba(236, 72, 153, 0.1);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #8B5CF6;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            color: #E5E7EB;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            color: #9CA3AF;
+            font-size: 14px;
+        }
+        
+        .current-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+        
+        .gallery-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-item .remove-btn:hover {
+            background: rgba(239, 68, 68, 1);
+            transform: scale(1.1);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #8B5CF6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden { display: none; }
+        
+        .main-image-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .main-image-preview {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+        }
+        
+        .form-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+            color: #8B5CF6;
+            font-size: 20px;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body class="admin-panel">
     <div class="admin-wrapper">
@@ -54,7 +205,7 @@
             <div class="admin-content">
                 <div class="admin-card">
                     <div class="card-body">
-                        <form method="POST">
+                        <form method="POST" id="pcForm">
                             {% with messages = get_flashed_messages(with_categories=true) %}
                                 {% if messages %}
                                     {% for category, message in messages %}
@@ -65,187 +216,246 @@
                                 {% endif %}
                             {% endwith %}
                             
-                            <!-- Informações Básicas -->
-                            <h3 style="margin-bottom: 20px; color: #8B5CF6;">
-                                <i class="fas fa-info-circle"></i> Informações Básicas
-                            </h3>
+                            <!-- Seção de Imagens -->
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-images"></i> Imagens
+                                </h3>
+                                
+                                <!-- Imagem Principal -->
+                                <div class="image-upload-section">
+                                    <h4 style="color: #E5E7EB; margin-bottom: 15px;">Imagem Principal</h4>
+                                    
+                                    <div class="main-image-container" id="mainImageContainer">
+                                        {% if pc and pc.main_image %}
+                                        <img src="{{ pc.main_image }}" alt="Imagem atual" class="main-image-preview" id="mainImagePreview">
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="upload-area" id="mainUploadArea" onclick="document.getElementById('mainImageInput').click()">
+                                        <div class="upload-icon">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                        </div>
+                                        <div class="upload-text">Clique ou arraste a imagem principal</div>
+                                        <div class="upload-hint">PNG, JPG, JPEG ou WEBP (máx. 16MB)</div>
+                                    </div>
+                                    
+                                    <input type="file" id="mainImageInput" accept="image/*" style="display: none;">
+                                    <input type="hidden" name="main_image" id="mainImageUrl" value="{{ pc.main_image if pc else '' }}">
+                                </div>
+                                
+                                <!-- Galeria de Imagens -->
+                                <div class="image-upload-section">
+                                    <h4 style="color: #E5E7EB; margin-bottom: 15px;">Galeria de Imagens</h4>
+                                    
+                                    <div class="upload-area" id="galleryUploadArea" onclick="document.getElementById('galleryImageInput').click()">
+                                        <div class="upload-icon">
+                                            <i class="fas fa-images"></i>
+                                        </div>
+                                        <div class="upload-text">Adicionar imagens à galeria</div>
+                                        <div class="upload-hint">Múltiplas imagens para mostrar diferentes ângulos</div>
+                                    </div>
+                                    
+                                    <input type="file" id="galleryImageInput" accept="image/*" multiple style="display: none;">
+                                    <input type="hidden" name="gallery" id="galleryData" value="{{ pc.gallery if pc else '[]' }}">
+                                    
+                                    <div class="image-gallery" id="imageGallery">
+                                        <!-- Imagens da galeria serão carregadas aqui via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
                             
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="name">Nome do PC *</label>
-                                    <input type="text" id="name" name="name" value="{{ pc.name if pc else '' }}" required>
+                            <!-- Informações Básicas -->
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-info-circle"></i> Informações Básicas
+                                </h3>
+                                
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="name">Nome do PC *</label>
+                                        <input type="text" id="name" name="name" value="{{ pc.name if pc else '' }}" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="category_id">Categoria *</label>
+                                        <select id="category_id" name="category_id" required>
+                                            <option value="">Selecione uma categoria</option>
+                                            {% for category in categories %}
+                                            <option value="{{ category.id }}" 
+                                                    {% if pc and pc.category_id == category.id %}selected{% endif %}>
+                                                {{ category.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="category_id">Categoria *</label>
-                                    <select id="category_id" name="category_id" required>
-                                        <option value="">Selecione uma categoria</option>
-                                        {% for category in categories %}
-                                        <option value="{{ category.id }}" 
-                                                {% if pc and pc.category_id == category.id %}selected{% endif %}>
-                                            {{ category.name }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
+                                    <label for="subtitle">Subtítulo</label>
+                                    <input type="text" id="subtitle" name="subtitle" value="{{ pc.subtitle if pc else '' }}">
                                 </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="subtitle">Subtítulo</label>
-                                <input type="text" id="subtitle" name="subtitle" value="{{ pc.subtitle if pc else '' }}">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="description">Descrição</label>
-                                <textarea id="description" name="description" rows="4">{{ pc.description if pc else '' }}</textarea>
+                                
+                                <div class="form-group">
+                                    <label for="description">Descrição</label>
+                                    <textarea id="description" name="description" rows="4">{{ pc.description if pc else '' }}</textarea>
+                                </div>
                             </div>
                             
                             <!-- Preços -->
-                            <h3 style="margin: 40px 0 20px; color: #8B5CF6;">
-                                <i class="fas fa-dollar-sign"></i> Preços
-                            </h3>
-                            
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="price">Preço Atual (R$) *</label>
-                                    <input type="number" id="price" name="price" step="0.01" 
-                                           value="{{ pc.price if pc else '' }}" required>
-                                </div>
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-dollar-sign"></i> Preços
+                                </h3>
                                 
-                                <div class="form-group">
-                                    <label for="price_old">Preço Anterior (R$)</label>
-                                    <input type="number" id="price_old" name="price_old" step="0.01" 
-                                           value="{{ pc.price_old if pc and pc.price_old else '' }}">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="setup_price">Preço Configuração (R$)</label>
-                                    <input type="number" id="setup_price" name="setup_price" step="0.01" 
-                                           value="{{ pc.setup_price if pc else '150.00' }}">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="price">Preço Atual (R$) *</label>
+                                        <input type="number" id="price" name="price" step="0.01" 
+                                               value="{{ pc.price if pc else '' }}" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="price_old">Preço Anterior (R$)</label>
+                                        <input type="number" id="price_old" name="price_old" step="0.01" 
+                                               value="{{ pc.price_old if pc and pc.price_old else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="setup_price">Preço Configuração (R$)</label>
+                                        <input type="number" id="setup_price" name="setup_price" step="0.01" 
+                                               value="{{ pc.setup_price if pc else '150.00' }}">
+                                    </div>
                                 </div>
                             </div>
                             
                             <!-- Especificações -->
-                            <h3 style="margin: 40px 0 20px; color: #8B5CF6;">
-                                <i class="fas fa-microchip"></i> Especificações
-                            </h3>
-                            
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="processor">Processador</label>
-                                    <input type="text" id="processor" name="processor" value="{{ pc.processor if pc else '' }}">
-                                </div>
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-microchip"></i> Especificações
+                                </h3>
                                 
-                                <div class="form-group">
-                                    <label for="gpu">Placa de Vídeo</label>
-                                    <input type="text" id="gpu" name="gpu" value="{{ pc.gpu if pc else '' }}">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="ram">Memória RAM</label>
-                                    <input type="text" id="ram" name="ram" value="{{ pc.ram if pc else '' }}">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="storage">Armazenamento</label>
-                                    <input type="text" id="storage" name="storage" value="{{ pc.storage if pc else '' }}">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="motherboard">Placa-mãe</label>
-                                    <input type="text" id="motherboard" name="motherboard" value="{{ pc.motherboard if pc else '' }}">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="psu">Fonte</label>
-                                    <input type="text" id="psu" name="psu" value="{{ pc.psu if pc else '' }}">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="case_model">Gabinete</label>
-                                    <input type="text" id="case_model" name="case_model" value="{{ pc.case_model if pc else '' }}">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="cooling">Refrigeração</label>
-                                    <input type="text" id="cooling" name="cooling" value="{{ pc.cooling if pc else '' }}">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="processor">Processador</label>
+                                        <input type="text" id="processor" name="processor" value="{{ pc.processor if pc else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="gpu">Placa de Vídeo</label>
+                                        <input type="text" id="gpu" name="gpu" value="{{ pc.gpu if pc else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="ram">Memória RAM</label>
+                                        <input type="text" id="ram" name="ram" value="{{ pc.ram if pc else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="storage">Armazenamento</label>
+                                        <input type="text" id="storage" name="storage" value="{{ pc.storage if pc else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="motherboard">Placa-mãe</label>
+                                        <input type="text" id="motherboard" name="motherboard" value="{{ pc.motherboard if pc else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="psu">Fonte</label>
+                                        <input type="text" id="psu" name="psu" value="{{ pc.psu if pc else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="case_model">Gabinete</label>
+                                        <input type="text" id="case_model" name="case_model" value="{{ pc.case_model if pc else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="cooling">Refrigeração</label>
+                                        <input type="text" id="cooling" name="cooling" value="{{ pc.cooling if pc else '' }}">
+                                    </div>
                                 </div>
                             </div>
                             
                             <!-- Arte/Grafite -->
-                            <h3 style="margin: 40px 0 20px; color: #8B5CF6;">
-                                <i class="fas fa-paint-brush"></i> Arte e Grafite
-                            </h3>
-                            
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="graffiti_artist">Artista</label>
-                                    <input type="text" id="graffiti_artist" name="graffiti_artist" value="{{ pc.graffiti_artist if pc else '' }}">
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-paint-brush"></i> Arte e Grafite
+                                </h3>
+                                
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="graffiti_artist">Artista</label>
+                                        <input type="text" id="graffiti_artist" name="graffiti_artist" value="{{ pc.graffiti_artist if pc else '' }}">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="graffiti_style">Estilo</label>
+                                        <input type="text" id="graffiti_style" name="graffiti_style" value="{{ pc.graffiti_style if pc else '' }}">
+                                    </div>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="graffiti_style">Estilo</label>
-                                    <input type="text" id="graffiti_style" name="graffiti_style" value="{{ pc.graffiti_style if pc else '' }}">
+                                    <label for="graffiti_description">Descrição da Arte</label>
+                                    <textarea id="graffiti_description" name="graffiti_description" rows="3">{{ pc.graffiti_description if pc else '' }}</textarea>
                                 </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="graffiti_description">Descrição da Arte</label>
-                                <textarea id="graffiti_description" name="graffiti_description" rows="3">{{ pc.graffiti_description if pc else '' }}</textarea>
                             </div>
                             
                             <!-- Status e Flags -->
-                            <h3 style="margin: 40px 0 20px; color: #8B5CF6;">
-                                <i class="fas fa-cogs"></i> Status e Configurações
-                            </h3>
-                            
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label>
-                                        <input type="checkbox" name="active" value="1" 
-                                               {% if not pc or pc.active %}checked{% endif %}>
-                                        Ativo
-                                    </label>
-                                </div>
+                            <div class="form-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-cogs"></i> Status e Configurações
+                                </h3>
                                 
-                                <div class="form-group">
-                                    <label>
-                                        <input type="checkbox" name="featured" value="1" 
-                                               {% if pc and pc.featured %}checked{% endif %}>
-                                        Destaque
-                                    </label>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>
-                                        <input type="checkbox" name="bestseller" value="1" 
-                                               {% if pc and pc.bestseller %}checked{% endif %}>
-                                        Mais Vendido
-                                    </label>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>
-                                        <input type="checkbox" name="limited_edition" value="1" 
-                                               {% if pc and pc.limited_edition %}checked{% endif %}>
-                                        Edição Limitada
-                                    </label>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>
-                                        <input type="checkbox" name="pre_order" value="1" 
-                                               {% if pc and pc.pre_order %}checked{% endif %}>
-                                        Pré-venda
-                                    </label>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>
-                                        <input type="checkbox" name="in_stock" value="1" 
-                                               {% if not pc or pc.in_stock %}checked{% endif %}>
-                                        Em Estoque
-                                    </label>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" name="active" value="1" 
+                                                   {% if not pc or pc.active %}checked{% endif %}>
+                                            Ativo
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" name="featured" value="1" 
+                                                   {% if pc and pc.featured %}checked{% endif %}>
+                                            Destaque
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" name="bestseller" value="1" 
+                                                   {% if pc and pc.bestseller %}checked{% endif %}>
+                                            Mais Vendido
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" name="limited_edition" value="1" 
+                                                   {% if pc and pc.limited_edition %}checked{% endif %}>
+                                            Edição Limitada
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" name="pre_order" value="1" 
+                                                   {% if pc and pc.pre_order %}checked{% endif %}>
+                                            Pré-venda
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" name="in_stock" value="1" 
+                                                   {% if not pc or pc.in_stock %}checked{% endif %}>
+                                            Em Estoque
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -254,7 +464,7 @@
                                 <a href="{{ url_for('admin_pcs') }}" class="btn btn-secondary">
                                     <i class="fas fa-times"></i> Cancelar
                                 </a>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
                                     <i class="fas fa-save"></i> 
                                     {% if action == 'edit' %}Atualizar{% else %}Criar{% endif %} PC
                                 </button>
@@ -266,32 +476,222 @@
         </main>
     </div>
     
-    <style>
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+    <script>
+        // Variáveis globais
+        let galleryImages = [];
+        let currentMainImage = '{{ pc.main_image if pc else "" }}';
+        
+        // Inicializar quando página carrega
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGalleryImages();
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // Upload de imagem principal
+            document.getElementById('mainImageInput').addEventListener('change', handleMainImageUpload);
+            
+            // Upload de galeria
+            document.getElementById('galleryImageInput').addEventListener('change', handleGalleryUpload);
+            
+            // Drag and drop
+            setupDragAndDrop();
         }
         
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #E5E7EB;
-            font-weight: 500;
+        function setupDragAndDrop() {
+            const uploadAreas = document.querySelectorAll('.upload-area');
+            
+            uploadAreas.forEach(area => {
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    area.classList.add('dragover');
+                });
+                
+                area.addEventListener('dragleave', () => {
+                    area.classList.remove('dragover');
+                });
+                
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    area.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        if (area.id === 'mainUploadArea') {
+                            uploadMainImage(files[0]);
+                        } else {
+                            uploadGalleryImages(files);
+                        }
+                    }
+                });
+            });
         }
         
-        .form-group input[type="checkbox"] {
-            width: auto;
-            margin-right: 8px;
+        function handleMainImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadMainImage(file);
+            }
         }
         
-        h3 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+        function handleGalleryUpload(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                uploadGalleryImages(files);
+            }
         }
-    </style>
+        
+        function uploadMainImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Mostrar loading
+            showLoading('mainUploadArea');
+            
+            fetch('/admin/upload-image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading('mainUploadArea');
+                
+                if (data.success) {
+                    currentMainImage = data.url;
+                    document.getElementById('mainImageUrl').value = data.url;
+                    
+                    // Mostrar preview
+                    const container = document.getElementById('mainImageContainer');
+                    container.innerHTML = `<img src="${data.url}" alt="Imagem principal" class="main-image-preview" id="mainImagePreview">`;
+                    
+                    showNotification('Imagem principal carregada com sucesso!', 'success');
+                } else {
+                    showNotification(data.error || 'Erro ao fazer upload', 'error');
+                }
+            })
+            .catch(error => {
+                hideLoading('mainUploadArea');
+                showNotification('Erro ao fazer upload da imagem', 'error');
+                console.error('Erro:', error);
+            });
+        }
+        
+        function uploadGalleryImages(files) {
+            Array.from(files).forEach(file => {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/admin/upload-image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        galleryImages.push({
+                            url: data.url,
+                            filename: data.filename
+                        });
+                        updateGalleryDisplay();
+                        updateGalleryData();
+                        showNotification('Imagem adicionada à galeria!', 'success');
+                    } else {
+                        showNotification(data.error || 'Erro ao fazer upload', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Erro ao fazer upload da imagem', 'error');
+                    console.error('Erro:', error);
+                });
+            });
+        }
+        
+        function removeGalleryImage(index) {
+            const image = galleryImages[index];
+            
+            if (confirm('Remover esta imagem da galeria?')) {
+                // Remover do servidor
+                fetch('/admin/delete-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({filename: image.filename})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        galleryImages.splice(index, 1);
+                        updateGalleryDisplay();
+                        updateGalleryData();
+                        showNotification('Imagem removida da galeria!', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao remover imagem:', error);
+                });
+            }
+        }
+        
+        function loadGalleryImages() {
+            const galleryData = document.getElementById('galleryData').value;
+            if (galleryData && galleryData !== '[]') {
+                try {
+                    galleryImages = JSON.parse(galleryData);
+                    updateGalleryDisplay();
+                } catch (e) {
+                    console.error('Erro ao carregar galeria:', e);
+                    galleryImages = [];
+                }
+            }
+        }
+        
+        function updateGalleryDisplay() {
+            const gallery = document.getElementById('imageGallery');
+            gallery.innerHTML = '';
+            
+            galleryImages.forEach((image, index) => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                item.innerHTML = `
+                    <img src="${image.url}" alt="Galeria ${index + 1}">
+                    <button type="button" class="remove-btn" onclick="removeGalleryImage(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                gallery.appendChild(item);
+            });
+        }
+        
+        function updateGalleryData() {
+            document.getElementById('galleryData').value = JSON.stringify(galleryImages);
+        }
+        
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '<div class="loading"></div><div>Carregando...</div>';
+        }
+        
+        function hideLoading(elementId) {
+            // A área será atualizada pelo callback de sucesso
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '9999';
+            notification.style.maxWidth = '400px';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+    </script>
 </body>
 </html>
