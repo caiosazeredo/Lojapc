@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="account-page">
+    <div class="container">
+        <div class="account-layout">
+            <aside class="account-sidebar">
+                <div class="account-user">
+                    <div class="user-avatar">{{ customer.name[0]|upper }}</div>
+                    <div class="user-name">{{ customer.name }}</div>
+                    <div class="user-email">{{ customer.email }}</div>
+                </div>
+                <nav class="account-menu">
+                    <a href="{{ url_for('customer_dashboard') }}" class="account-menu-item active">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('customer_orders') }}" class="account-menu-item">
+                        <i class="fas fa-shopping-bag"></i> Meus Pedidos
+                    </a>
+                    <a href="{{ url_for('customer_profile') }}" class="account-menu-item">
+                        <i class="fas fa-user"></i> Meu Perfil
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="account-menu-item">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </a>
+                </nav>
+            </aside>
+            
+            <main class="account-content">
+                <h1>Olá, {{ customer.name }}!</h1>
+                <p>Bem-vindo ao seu painel de controle</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+                        <div class="stat-info">
+                            <h3>{{ stats.total_orders }}</h3>
+                            <p>Pedidos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                        <div class="stat-info">
+                            <h3>R$ {{ "%.2f"|format(stats.total_spent)|replace(".", ",") }}</h3>
+                            <p>Total gasto</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2>Pedidos Recentes</h2>
+                {% if orders %}
+                    {% for order in orders %}
+                    <div class="order-item">
+                        <div class="order-info">
+                            <div class="order-number">#{{ order.order_number }}</div>
+                            <div class="order-date">{{ order.created_at }}</div>
+                        </div>
+                        <span class="order-status status-{{ order.order_status }}">{{ order.order_status }}</span>
+                        <div class="order-total">R$ {{ "%.2f"|format(order.total)|replace(".", ",") }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Você ainda não fez nenhum pedido.</p>
+                {% endif %}
+            </main>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - PixelCraft PC</title>
+    <title>Login - PixelCraft PC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="admin-login">
-    <div class="login-container">
-        <div class="login-box">
-            <h1>PixelCraft PC</h1>
-            <p>Área Administrativa</p>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-box">
+            <a href="{{ url_for('index') }}" class="logo-link">
+                <div class="logo-icon">PC</div>
+                <span class="logo-text">PixelCraft</span>
+            </a>
+            
+            <h1>Bem-vindo de volta!</h1>
+            <p>Entre na sua conta para continuar</p>
             
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -23,8 +28,8 @@
             
             <form method="POST">
                 <div class="form-group">
-                    <label>Usuário</label>
-                    <input type="text" name="username" required autofocus>
+                    <label>E-mail</label>
+                    <input type="email" name="email" required autofocus>
                 </div>
                 <div class="form-group">
                     <label>Senha</label>
@@ -34,6 +39,10 @@
                     <i class="fas fa-sign-in-alt"></i> Entrar
                 </button>
             </form>
+            
+            <div class="auth-footer">
+                Não tem uma conta? <a href="{{ url_for('customer_register') }}">Criar conta</a>
+            </div>
         </div>
     </div>
 </body>

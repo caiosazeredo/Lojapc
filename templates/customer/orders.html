@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="account-page">
+    <div class="container">
+        <h1>Meus Pedidos</h1>
+        
+        {% if orders %}
+            <div class="orders-list">
+                {% for order in orders %}
+                <div class="order-card">
+                    <div class="order-header">
+                        <h3>Pedido #{{ order.order_number }}</h3>
+                        <span class="order-date">{{ order.created_at }}</span>
+                    </div>
+                    <div class="order-body">
+                        <p>Status: <span class="status-badge status-{{ order.order_status }}">{{ order.order_status }}</span></p>
+                        <p>Total: R$ {{ "%.2f"|format(order.total)|replace(".", ",") }}</p>
+                        {% if order.tracking_code %}
+                        <p>Rastreamento: {{ order.tracking_code }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-shopping-bag"></i>
+                <h2>Nenhum pedido ainda</h2>
+                <a href="{{ url_for('catalog') }}" class="btn btn-primary">Ver PCs</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

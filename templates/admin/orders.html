@@ -4,36 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedidos - PixelCraft Admin</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body class="admin-panel">
     <div class="admin-wrapper">
-        <!-- Sidebar -->
         <aside class="admin-sidebar">
             <div class="sidebar-header">
                 <h2>PixelCraft PC</h2>
                 <span>Admin Panel</span>
             </div>
-            
             <nav class="sidebar-nav">
                 <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
                     <i class="fas fa-dashboard"></i> Dashboard
                 </a>
-                <a href="{{ url_for('admin_pcs') }}" class="nav-item">
-                    <i class="fas fa-desktop"></i> PCs
-                </a>
-                <a href="{{ url_for('admin_games') }}" class="nav-item active">
-                    <i class="fas fa-shopping-bag"></i> Pedidos
-                </a>
-                <a href="{{ url_for('admin_orders') }}" class="nav-item">
+                <a href="{{ url_for('admin_orders') }}" class="nav-item active">
                     <i class="fas fa-shopping-bag"></i> Pedidos
                 </a>
                 <a href="{{ url_for('admin_customers') }}" class="nav-item">
                     <i class="fas fa-users"></i> Clientes
-                </a>
-                <a href="{{ url_for('admin_settings') }}" class="nav-item">
-                    <i class="fas fa-cog"></i> Configurações
                 </a>
                 <a href="{{ url_for('admin_logout') }}" class="nav-item">
                     <i class="fas fa-sign-out-alt"></i> Sair
@@ -42,21 +31,52 @@
         </aside>
         
         <main class="admin-main">
-            <div class="admin-header">
-                <h1>Pedidos</h1>
-            </div>
+            <h1>Pedidos</h1>
             
-            <div class="admin-content">
-                <div class="admin-card">
-                    <div class="card-body">
-                        <p style="text-align: center; padding: 40px; color: #9CA3AF;">
-                            <i class="fas fa-shopping-bag" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
-                            Gerenciamento de pedidos em desenvolvimento
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Total</th>
+                        <th>Pagamento</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.order_number }}</td>
+                        <td>{{ order.customer_name or 'Anônimo' }}</td>
+                        <td>R$ {{ "%.2f"|format(order.total)|replace(".", ",") }}</td>
+                        <td>{{ order.payment_method }}</td>
+                        <td><span class="status-badge status-{{ order.order_status }}">{{ order.order_status }}</span></td>
+                        <td>{{ order.created_at }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="updateOrderStatus('{{ order.order_number }}')">
+                                Atualizar
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </main>
     </div>
+    
+    <script>
+    function updateOrderStatus(orderNumber) {
+        const newStatus = prompt('Novo status (pending/processing/shipped/delivered/cancelled):');
+        if (newStatus) {
+            fetch(`/admin/order/${orderNumber}/update-status`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `status=${newStatus}`
+            }).then(() => location.reload());
+        }
+    }
+    </script>
 </body>
 </html>

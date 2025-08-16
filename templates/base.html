@@ -3,197 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{% block meta_description %}PixelCraft PC - PCs Gamers únicos com arte urbana carioca. Entrega e configuração no Rio de Janeiro.{% endblock %}">
-    <title>{% block title %}PixelCraft PC - Seu PC único, arte e performance{% endblock %}</title>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Icons -->
+    <title>{% block title %}PixelCraft PC - PCs Gamers Únicos{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
-        <div class="header-top">
-            <div class="container">
-                <div class="header-top-content">
-                    <div class="header-info">
-                        <span><i class="fas fa-truck"></i> Entrega e configuração no Rio</span>
-                        <span><i class="fas fa-shield-alt"></i> Garantia de 2 anos</span>
-                    </div>
-                    <div class="header-contact">
-                        <a href="https://wa.me/5521999999999" target="_blank">
-                            <i class="fab fa-whatsapp"></i> WhatsApp
-                        </a>
-                        <a href="https://instagram.com/pixelcraftpc" target="_blank">
-                            <i class="fab fa-instagram"></i> Instagram
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <nav class="navbar">
             <div class="container">
                 <div class="nav-content">
                     <a href="{{ url_for('index') }}" class="logo">
-                        <div class="logo-icon">
-                            <span class="pixel">P</span><span class="craft">C</span>
-                        </div>
+                        <div class="logo-icon">PC</div>
                         <div class="logo-text">
                             <span class="logo-name">PixelCraft</span>
                             <span class="logo-tag">PC</span>
                         </div>
                     </a>
                     
-                    <div class="nav-menu" id="navMenu">
-                        <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
-                            <i class="fas fa-home"></i> Início
+                    <div class="nav-menu">
+                        <a href="{{ url_for('index') }}" class="nav-link">Início</a>
+                        <a href="{{ url_for('catalog') }}" class="nav-link">PCs</a>
+                        <a href="{{ url_for('cart') }}" class="nav-link">
+                            <i class="fas fa-shopping-cart"></i> Carrinho
+                            <span class="cart-count">{{ session.get('cart', [])|length }}</span>
                         </a>
-                        <div class="nav-dropdown">
-                            <a href="{{ url_for('catalog') }}" class="nav-link {% if request.endpoint == 'catalog' %}active{% endif %}">
-                                <i class="fas fa-desktop"></i> PCs <i class="fas fa-chevron-down"></i>
-                            </a>
-                            <div class="dropdown-menu">
-                                <a href="{{ url_for('catalog', category='starter') }}">
-                                    <i class="fas fa-gamepad"></i> Starter
-                                </a>
-                                <a href="{{ url_for('catalog', category='pro-gamer') }}">
-                                    <i class="fas fa-trophy"></i> Pro Gamer
-                                </a>
-                                <a href="{{ url_for('catalog', category='creator') }}">
-                                    <i class="fas fa-video"></i> Creator
-                                </a>
-                                <a href="{{ url_for('catalog', category='ultra') }}">
-                                    <i class="fas fa-crown"></i> Ultra
-                                </a>
-                                <a href="{{ url_for('catalog', category='limited-edition') }}">
-                                    <i class="fas fa-star"></i> Limited Edition
-                                </a>
-                            </div>
-                        </div>
-                        <a href="#sobre" class="nav-link">
-                            <i class="fas fa-paint-brush"></i> Arte
-                        </a>
-                        <a href="#contato" class="nav-link">
-                            <i class="fas fa-phone"></i> Contato
-                        </a>
-                    </div>
-                    
-                    <div class="nav-actions">
-                        <button class="search-btn" onclick="toggleSearch()">
-                            <i class="fas fa-search"></i>
-                        </button>
-                        <a href="{{ url_for('cart') }}" class="cart-btn">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count" id="cartCount">0</span>
-                        </a>
-                        <button class="menu-toggle" onclick="toggleMenu()">
-                            <i class="fas fa-bars"></i>
-                        </button>
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.role == 'customer' %}
+                                <a href="{{ url_for('customer_dashboard') }}" class="nav-link">Minha Conta</a>
+                            {% endif %}
+                            <a href="{{ url_for('logout') }}" class="nav-link">Sair</a>
+                        {% else %}
+                            <a href="{{ url_for('customer_login') }}" class="nav-link">Login</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </nav>
-        
-        <!-- Search Bar -->
-        <div class="search-bar" id="searchBar">
-            <div class="container">
-                <div class="search-content">
-                    <input type="text" placeholder="Buscar PCs, processadores, placas de vídeo..." id="searchInput">
-                    <button onclick="search()"><i class="fas fa-search"></i></button>
-                </div>
-                <div class="search-results" id="searchResults"></div>
-            </div>
-        </div>
     </header>
     
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                    <div class="flash-message flash-{{ category }}">
-                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
-                        {{ message }}
-                        <button onclick="this.parentElement.remove()">×</button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-    
-    <!-- Main Content -->
     <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
         {% block content %}{% endblock %}
     </main>
     
-    <!-- Footer -->
     <footer class="footer">
-        <div class="footer-graffiti"></div>
         <div class="container">
             <div class="footer-content">
-                <div class="footer-section">
-                    <h3>PixelCraft PC</h3>
-                    <p>PCs únicos com arte urbana carioca. Cada máquina é uma obra de arte com performance de ponta.</p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
-                        <a href="#"><i class="fab fa-tiktok"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Categorias</h4>
-                    <ul>
-                        <li><a href="{{ url_for('catalog', category='starter') }}">PC Starter</a></li>
-                        <li><a href="{{ url_for('catalog', category='pro-gamer') }}">Pro Gamer</a></li>
-                        <li><a href="{{ url_for('catalog', category='creator') }}">Creator</a></li>
-                        <li><a href="{{ url_for('catalog', category='ultra') }}">Ultra</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Suporte</h4>
-                    <ul>
-                        <li><a href="#">Garantia</a></li>
-                        <li><a href="#">Entrega</a></li>
-                        <li><a href="#">Configuração</a></li>
-                        <li><a href="#">FAQ</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Newsletter</h4>
-                    <p>Receba ofertas exclusivas e novidades!</p>
-                    <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
-                        <input type="email" placeholder="Seu e-mail" required>
-                        <button type="submit">Inscrever</button>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
                 <p>&copy; 2024 PixelCraft PC. Todos os direitos reservados.</p>
-                <p>Made with <span class="heart">♥</span> in Rio de Janeiro</p>
+                <p>Made with ❤️ in Rio de Janeiro</p>
             </div>
         </div>
     </footer>
     
-    <!-- WhatsApp Button -->
-    <a href="https://wa.me/5521999999999" class="whatsapp-float" target="_blank">
-        <i class="fab fa-whatsapp"></i>
-    </a>
-    
-    <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
